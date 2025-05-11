@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.env
+.venv/
+env/
+venv/
+
+# Editor config
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Alembic artifacts 
+migrations/versions/__pycache__/
