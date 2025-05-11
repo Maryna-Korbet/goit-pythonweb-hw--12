@@ -67,6 +67,7 @@ app.add_middleware(
 
 app.include_router(contacts_route.router, prefix="/api")
 app.include_router(auth_route.router, prefix="/api")
+app.include_router(users_route.router, prefix="/api")
 
 
 @app.get("/")
