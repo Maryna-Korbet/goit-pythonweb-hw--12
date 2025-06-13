@@ -34,27 +34,24 @@ class Contact(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     first_name: Mapped[str] = mapped_column(
-        String(
-            constants.FIRST_NAME_MIN_LENGTH, 
-            constants.FIRST_NAME_MAX_LENGTH
-        ), 
+        String(constants.FIRST_NAME_MIN_LENGTH), 
         nullable=False,
         comment=messages.contact_schema_first_name.get('en')
     )
     last_name: Mapped[str] = mapped_column(
-        String(constants.LAST_NAME_MIN_LENGTH, constants.LAST_NAME_MAX_LENGTH), 
+        String(constants.LAST_NAME_MIN_LENGTH), 
         nullable=False,
         comment=messages.contact_schema_last_name.get('en')
     )
     email: Mapped[str] = mapped_column(
-        String(constants.EMAIL_MIN_LENGTH, constants.EMAIL_MAX_LENGTH), 
+        String(constants.EMAIL_MIN_LENGTH), 
         nullable=False,
         unique=True,
         index=True,
         comment=messages.contact_schema_email.get('en')
     )
     phone: Mapped[str | None] = mapped_column(
-        String(constants.PHONE_MIN_LENGTH, constants.PHONE_MAX_LENGTH),
+        String(constants.PHONE_MIN_LENGTH),
         nullable=True,
         comment=messages.contact_schema_phone.get('en')
     )

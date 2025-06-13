@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from slowapi.errors import RateLimitExceeded
 
-from src.routes import contacts_route, auth_route
+from src.routes import contacts_route, auth_route, users_route
 from src.database.db import get_db, sessionmanager
 from src.config import messages
 

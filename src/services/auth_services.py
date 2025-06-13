@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import secrets
+import logging
 
 import jwt
 import bcrypt
@@ -16,7 +17,10 @@ from src.entity.models import User
 from src.repositories.refresh_token_repository import RefreshTokenRepository
 from src.repositories.user_repository import UserRepository
 from src.schemas.user_schema import UserCreate
+from src.services.cache import get_cache_service, CacheService
 
+
+logger = logging.getLogger(__name__)
 
 redis_client = redis.from_url(settings.REDIS_URL)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -50,6 +54,12 @@ class AuthService:
 
     async def authenticate(self, username: str, password: str) -> User:
         """Authenticate user."""
+        cache = await get_cache_service()
+        cached_user = await cache.get_cached_user(username)
+        
+        if cached_user:
+            return cached_user
+
         user = await self.user_repository.get_by_username(username)
         if not user:
             raise HTTPException(
@@ -69,6 +79,7 @@ class AuthService:
                 detail=messages.authenticate_wrong_user.get("en"),
             )
 
+        await cache.cache_user(user)
         return user
 
     async def register_user(self, user_data: UserCreate) -> User:
@@ -138,9 +149,14 @@ class AuthService:
                 detail=messages.invalid_token.get("en"),
             )
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme)) -> User:
+    async def get_current_user(
+            self, 
+            token: str = Depends(oauth2_scheme)
+            ) -> User:
         """Get current user."""
-        if await redis_client.exists(f"bl:{token}"):
+        cache = await get_cache_service()
+
+        if await cache.is_token_revoked(token):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=messages.revoked_token.get("en"),
@@ -158,7 +174,8 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=messages.validate_credentials.get("en"),
-            )
+            )       
+        user = await cache.get_cached_user(username)
         return user
 
     async def validate_refresh_token(self, token: str) -> User:
@@ -187,18 +204,27 @@ class AuthService:
         refresh_token = await self.refresh_token_repository.get_by_token_hash(
             token_hash
         )
-        if refresh_token and not refresh_token.revoked_at:
-            print(f"Revoking refresh token: {token_hash}")
-            await self.refresh_token_repository.revoke_token(refresh_token)
-        return None
+        if refresh_token:
+            if not refresh_token.revoked_at:
+                logger.info(f"Revoking refresh token: {token_hash}")
+                await self.refresh_token_repository.revoke_token(refresh_token)
+                user = await self.user_repository.get_by_id(refresh_token.user_id)
+                if user:
+                    cache = await get_cache_service()
+                    await cache.delete_user_cache(user.username)
+            else:
+                logger.info(f"Token already revoked: {token_hash}")
+        else:
+            logger.warning(f"Refresh token not found: {token_hash}")
 
-    async def revoke_access_token(self, token: str) -> None:
+    async def revoke_access_token(
+            self, 
+            token: str,
+            cache_service: CacheService = Depends(get_cache_service)
+            ) -> None:
         """Revoke access token."""
         payload = self.decode_and_validate_access_token(token)
         exp = payload.get("exp")
         if exp:
-            current_time = datetime.now(timezone.utc).timestamp()
-            ttl = int(exp - current_time)
-            if ttl > 0:
-                await redis_client.setex(f"bl:{token}", ttl, "1")
-        return None
+            expire_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+            await cache_service.revoke_token(token, expire_at)

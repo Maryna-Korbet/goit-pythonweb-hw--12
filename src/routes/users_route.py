@@ -12,7 +12,8 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from src.services.auth_services import AuthService, oauth2_scheme
-from src.schemas.user_schema import UserResponse
+from src.schemas.user_schema import UserResponse,
+from src.schemas.password_schema import ResetPasswordRequestSchema, ResetPasswordSchema
 from src.entity.models import User
 from src.config import messages
 from src.core.depend_service import (
@@ -28,6 +29,7 @@ from src.services.email_services import send_email
 from src.core.email_token import get_email_from_token
 from src.services.upload_file_services import UploadFileService
 from src.config.config import settings
+
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -120,3 +122,34 @@ def read_admin(current_user: User = Depends(get_current_admin_user)):
         .get("en")
         .format(username=current_user.username)
     }
+
+
+@router.post("/request_password_reset")
+async def request_password_reset(
+    body: ResetPasswordRequestSchema,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    user_service: UserService = Depends(get_user_service),
+):
+    """Request password reset."""
+    user = await user_service.request_password_reset(str(body.email))
+    if user:
+        background_tasks.add_task(
+            send_email,
+            user.email,
+            user.username,
+            str(request.base_url),
+            "reset_password"
+        )
+    return {"message": messages.password_reset_email_sent.get("en")}
+
+
+@router.post("/reset_password/{token}")
+async def reset_password(
+    token: str,
+    body: ResetPasswordSchema,
+    user_service: UserService = Depends(get_user_service),
+):
+    """Reset password."""
+    await user_service.reset_password(token, body.new_password)
+    return {"message": messages.password_reset_success.get("en")}

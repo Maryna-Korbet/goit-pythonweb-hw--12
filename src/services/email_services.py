@@ -5,7 +5,8 @@ from fastapi_mail.errors import ConnectionErrors
 from pydantic import EmailStr
 
 from src.config.config import settings
-from src.core.email_token import create_email_token
+from src.core.email_token import create_email_token, create_password_reset_token
+
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -22,22 +23,38 @@ conf = ConnectionConfig(
 )
 
 
-async def send_email(email: EmailStr, username: str, host: str):
-    """Send email."""
+async def send_email(
+    email: EmailStr, 
+    username: str, 
+    host: str, 
+    type_email: str
+):
+    """Send email for registration or password reset."""
     try:
-        token_verification = create_email_token({"sub": email})
+        if type_email == "confirm_email":
+            token = create_email_token({"sub": email})
+            subject = "Confirm your email"
+            template = "verify_email.html"
+        elif type_email == "reset_password":
+            token = create_password_reset_token({"sub": email})
+            subject = "Reset your password"
+            template = "reset_password.html"
+        else:
+            raise ValueError("Invalid email type")
+
         message = MessageSchema(
-            subject="Confirm your email",
+            subject=subject,
             recipients=[email],
             template_body={
                 "host": host,
                 "username": username,
-                "token": token_verification,
+                "token": token,
             },
             subtype=MessageType.html,
         )
 
         fm = FastMail(conf)
-        await fm.send_message(message, template_name="verify_email.html")
-    except ConnectionErrors as err:
-        print(err)
+        await fm.send_message(message, template_name=template)
+
+    except (ConnectionErrors, ValueError) as err:
+        print(f"Email sending error: {err}")

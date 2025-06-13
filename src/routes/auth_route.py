@@ -14,6 +14,7 @@ from src.database.db import get_db
 from src.services.auth_services import AuthService, oauth2_scheme
 from src.schemas.token import TokenResponse, RefreshTokenRequest
 from src.schemas.user_schema import UserCreate, UserResponse
+from src.services.cache import get_cache_service, CacheService
 from src.services.email_services import send_email
 
 
@@ -21,12 +22,19 @@ router = APIRouter(prefix="/users", tags=["users"])
 logger = logging.getLogger("uvicorn.error")
 
 
-def get_user_service(db: AsyncSession = Depends(get_db)):
+def get_user_service(
+        db: AsyncSession = Depends(get_db),
+        cache_service: CacheService = Depends(get_cache_service)
+        ):
     """Get user service."""
-    return AuthService(db)
+    return AuthService(db, cache_service)
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post(
+        "/register", 
+        response_model=UserResponse,
+        status_code=status.HTTP_201_CREATED
+        )
 async def register(
     user_data: UserCreate,
     background_tasks: BackgroundTasks,
@@ -39,7 +47,8 @@ async def register(
         send_email, 
         user_data.email, 
         user_data.username, 
-        str(request.base_url)
+        str(request.base_url),
+        "confirm_email"
     )
     return user
 

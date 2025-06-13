@@ -227,3 +227,11 @@ email_already_confirmed = {
 email_confirmed = {    
     "en": "Email confirmed",     
 }
+
+password_reset_email_sent = {    
+    "en": "Password reset email sent",     
+}
+
+password_reset_success = {    
+    "en": "Password reset success",     
+}
