@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.repositories.contacts_repository import ContactRepository
 from src.schemas.contact_schema import ContactSchema, ContactUpdateSchema
 from src.entity.models import User
+from fastapi import HTTPException, status
 
 
 class ContactService:
@@ -17,7 +18,15 @@ class ContactService:
 
     async def get_contact(self, contact_id: int, user: User):
         """Get a contact by ID."""
-        return await self.contact_repository.get_contact_by_id(contact_id, user)
+        contact = await self.contact_repository.get_contact_by_id(contact_id, user)
+        if not contact:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contact not found"
+            )
+        return contact
+    
+    
 
     async def create_contact(self, body: ContactSchema, user: User):
         """Create a new contact."""
@@ -25,6 +34,7 @@ class ContactService:
 
     async def remove_contact(self, contact_id: int, user: User):
         """Remove a contact by ID."""
+        await self.get_contact(contact_id, user)  
         return await self.contact_repository.remove_contact(contact_id, user)
 
     async def update_contact(self, contact_id: int, body: ContactUpdateSchema, user: User):

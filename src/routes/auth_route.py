@@ -18,7 +18,7 @@ from src.services.cache import get_cache_service, CacheService
 from src.services.email_services import send_email
 
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger("uvicorn.error")
 
 

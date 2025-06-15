@@ -28,8 +28,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 class AuthService:
     """Authentication service."""
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, cache: CacheService | None = None):
         self.db = db
+        self.cache = cache
         self.user_repository = UserRepository(self.db)
         self.refresh_token_repository = RefreshTokenRepository(self.db)
 

@@ -1,3 +1,5 @@
+import sys
+import os
 import asyncio
 from datetime import datetime
 
@@ -5,7 +7,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from unittest.mock import AsyncMock
 
 from main import app
@@ -15,6 +17,8 @@ from src.services.auth_services import AuthService
 from src.services.cache import CacheService, get_cache_service
 from src.services.email_services import send_email
 
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
@@ -36,6 +40,7 @@ test_user = {
 
 
 class FakeCacheService(CacheService):
+    """Fake cache service."""
     def __init__(self):
         self._cache = {}
         self._blacklist = set()
@@ -56,12 +61,14 @@ class FakeCacheService(CacheService):
         self._cache.pop(f"user:{username}", None)
 
     async def cleanup(self):
+        """Clear cache and blacklist."""
         self._cache.clear()
         self._blacklist.clear()
 
 
 @pytest.fixture(scope="module", autouse=True)
 def init_models_wrap():
+    """Initialize models."""
     async def init_models():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
@@ -88,6 +95,7 @@ def init_models_wrap():
 
 @pytest.fixture(scope="module")
 def client():
+    """Test client."""
     # Mock email service
     mock_send_email = AsyncMock()
     app.dependency_overrides[send_email] = lambda: mock_send_email
@@ -97,7 +105,7 @@ def client():
         async with TestingSessionLocal() as session:
             try:
                 yield session
-            except Exception as err:
+            except Exception:
                 await session.rollback()
                 raise
 
@@ -119,6 +127,7 @@ def client():
 
 @pytest_asyncio.fixture()
 async def get_token():
+    """Get token."""
     async with TestingSessionLocal() as session:
         fake_cache = FakeCacheService()
         auth_service = AuthService(session, fake_cache)
@@ -128,6 +137,7 @@ async def get_token():
 
 @pytest.fixture(autouse=True)
 async def cleanup_cache():
+    """Cleanup cache."""
     fake_cache = FakeCacheService()
     yield
     await fake_cache.cleanup()

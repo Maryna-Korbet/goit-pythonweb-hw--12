@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     # Redis
     REDIS_URL: str
+    REDIS_TTL: int = 3600  
 
     # Email
     MAIL_USERNAME: EmailStr 

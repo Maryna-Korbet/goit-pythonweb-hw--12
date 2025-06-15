@@ -30,7 +30,9 @@ class CacheService:
         cached_user = await self.redis.get(f"user:{username}")
         if cached_user:
             try:
-                user_data = UserResponse.model_validate_json(cached_user.decode("utf-8"))
+                if isinstance(cached_user, bytes):
+                    cached_user = cached_user.decode("utf-8")
+                user_data = UserResponse.model_validate_json(cached_user)
                 return User(**user_data.model_dump())
             except Exception:
                 return None

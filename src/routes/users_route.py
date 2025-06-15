@@ -12,7 +12,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from src.services.auth_services import AuthService, oauth2_scheme
-from src.schemas.user_schema import UserResponse,
+from src.schemas.user_schema import UserResponse
 from src.schemas.password_schema import ResetPasswordRequestSchema, ResetPasswordSchema
 from src.entity.models import User
 from src.config import messages

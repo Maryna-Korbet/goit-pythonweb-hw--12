@@ -71,12 +71,12 @@ async def test_create_contact(contact_repository, mock_session, mock_user):
     """Create contact."""
     # Arrange
     contact_data = ContactSchema(
+        id=1,
         first_name="Maryna",
         last_name="Korbet",
         email="maryna@gmail.com",
-        phone_number="1234567890",
+        phone="1234567890",
         birthday=date(1986, 1, 1),
-        address="2545 5th St, New York, NY 10001",
     )
     expected_contact = Contact(**contact_data.model_dump(), user=mock_user)
     mock_session.refresh.return_value = expected_contact
@@ -113,8 +113,8 @@ async def test_remove_contact(contact_repository, mock_session, mock_user):
 async def test_update_contact(contact_repository, mock_session, mock_user):
     """Update contact."""
     # Arrange
-    mock_contact = Contact(id=1, user_id=mock_user.id, phone_number="123456789")
-    updated_data = ContactUpdateSchema(phone_number="234567890")
+    mock_contact = Contact(id=1, user_id=mock_user.id, phone="123456789")
+    updated_data = ContactUpdateSchema(phone="2345678901")
     mock_result = Mock()
     mock_result.scalar_one_or_none.return_value = mock_contact
     mock_session.execute.return_value = mock_result
@@ -126,7 +126,7 @@ async def test_update_contact(contact_repository, mock_session, mock_user):
     )
 
     # Assert
-    assert result.phone_number == "234567890"
+    assert result.phone == "2345678901"
     mock_session.commit.assert_called_once()
     mock_session.refresh.assert_called_once()
 

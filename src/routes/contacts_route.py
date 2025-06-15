@@ -68,7 +68,7 @@ async def get_contact(
     if not contact:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=messages.contact_not_found.get("ua"),
+            detail=messages.contact_not_found.get("en"),
         )
     return contact
 

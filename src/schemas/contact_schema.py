@@ -9,7 +9,6 @@ from src.config import constants
 
 class ContactSchema(BaseModel):
     """Contact schema for creating a new contact."""
-    id: int
     first_name: str = Field(
         min_length=constants.FIRST_NAME_MIN_LENGTH, 
         max_length=constants.FIRST_NAME_MAX_LENGTH,
@@ -25,16 +24,16 @@ class ContactSchema(BaseModel):
         max_length=constants.EMAIL_MAX_LENGTH,
         description=messages.contact_schema_email.get("en")
     )
-    phone: Optional[str] = Field(
+    phone: str = Field(
         min_length=constants.PHONE_MIN_LENGTH, 
         max_length=constants.PHONE_MAX_LENGTH,
         description=messages.contact_schema_phone.get("en")
     )
-    birthday: date = Field(
+    birthday: Optional[date] = Field(
         default=None, 
         description=messages.contact_birthday_description.get("en")
     )
-    additional_info: str = Field(
+    additional_info: Optional[str] = Field(
         default=None, 
         max_length=constants.ADDITIONAL_INFO_MAX_LENGTH,
         description=messages.contact_additional_info_description.get("en")
@@ -43,32 +42,35 @@ class ContactSchema(BaseModel):
 
 class ContactUpdateSchema(BaseModel):
     """Contact schema for updating a contact."""
-    id: int
-    first_name: str = Field(
+    first_name: Optional[str] = Field(
+        default=None,
         min_length=constants.FIRST_NAME_MIN_LENGTH, 
         max_length=constants.FIRST_NAME_MAX_LENGTH,
         description=messages.contact_schema_first_name.get("en")
     )
-    last_name: str = Field(
+    last_name: Optional[str] = Field(
+        default=None,
         min_length=constants.LAST_NAME_MIN_LENGTH, 
         max_length=constants.LAST_NAME_MAX_LENGTH,
         description=messages.contact_schema_last_name.get("en")
     )
-    email: str = Field(
+    email: Optional[str] = Field(
+        default=None,
         min_length=constants.EMAIL_MIN_LENGTH, 
         max_length=constants.EMAIL_MAX_LENGTH,
         description=messages.contact_schema_email.get("en")
     )
     phone: Optional[str] = Field(
+        default=None,
         min_length=constants.PHONE_MIN_LENGTH, 
         max_length=constants.PHONE_MAX_LENGTH,
         description=messages.contact_schema_phone.get("en")
     )
-    birthday: date = Field(
+    birthday: Optional[date] = Field(
         default=None, 
         description=messages.contact_birthday_description.get("en")
     )
-    additional_info: str = Field(
+    additional_info: Optional[str] = Field(
         default=None, 
         max_length=constants.ADDITIONAL_INFO_MAX_LENGTH,
         description=messages.contact_additional_info_description.get("en")

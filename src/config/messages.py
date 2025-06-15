@@ -235,3 +235,11 @@ password_reset_email_sent = {
 password_reset_success = {    
     "en": "Password reset success",     
 }
+
+
+# ERRORS
+
+contact_not_found = {
+        "ua": "Контакт не знайдено",
+        "en": "Contact not found"
+}

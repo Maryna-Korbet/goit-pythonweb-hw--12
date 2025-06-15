@@ -8,6 +8,7 @@ from src.schemas.user_schema import UserCreate
 
 @pytest.fixture
 def mock_session():
+    """Mock session."""
     session = AsyncMock(spec=AsyncSession)
     session.execute = AsyncMock()
     session.commit = AsyncMock()
